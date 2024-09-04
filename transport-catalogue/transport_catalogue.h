@@ -35,7 +35,7 @@ namespace transport {
         void AddBus(const std::string_view id, std::vector<std::string_view> stops);
         const BusDescription* GetBus(const std::string_view id) const;
         const std::optional<RouteStatistics> GetStat(const BusDescription* bus) const;
-        const std::vector<std::string_view> GetBusses4Stop(const std::string_view id) const;
+        const std::set<std::string_view>& GetBusses4Stop(const std::string_view id) const;
     private:
         std::string_view AddId(const std::string_view id);
     private:
