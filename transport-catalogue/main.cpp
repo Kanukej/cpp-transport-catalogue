@@ -10,19 +10,7 @@ using namespace transport;
 int main() {
     TransportCatalogue catalogue;
     
-    {
-        InputReader reader;
-        for (int i = 0; i < reader.ReadCount(cin); ++i) {
-            string line;
-            getline(cin, line);
-            reader.ParseLine(line);
-        }
-        reader.ApplyCommands(catalogue);
-    }
+    ReadAndApply(catalogue, cin);
 
-    for (int i = 0; i < reader.ReadCount(cin); ++i) {
-        string line;
-        getline(cin, line);
-        ParseAndPrintStat(catalogue, line, cout);
-    }
+    ReadAndEval(catalogue, cin, cout);
 }
