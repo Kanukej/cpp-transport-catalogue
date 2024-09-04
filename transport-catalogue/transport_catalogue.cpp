@@ -22,7 +22,7 @@ void TransportCatalogue::AddBus(const std::string_view id, const std::vector<std
     std::string_view bus_id = AddId(id);
     std::vector<std::string_view> stops_ids;
     stops_ids.reserve(stops.size());
-    for (const auto& s : stops) {
+    for (const auto& stop : stops) {
         stops_ids.push_back(stops_.at(s).id);
         busses4stop_[stops_ids.back()].insert(bus_id);
     }
@@ -30,8 +30,9 @@ void TransportCatalogue::AddBus(const std::string_view id, const std::vector<std
 }
 
 const BusDescription* TransportCatalogue::GetBus(const std::string_view id) const {
-    if (busses_.count(id)) {
-        return &busses_.at(id);
+    auto bus_ptr = busses_.find(id);
+    if (bus_ptr != busses_.end()) {
+        return &bus_ptr->second;
     }
     return nullptr;
 }
