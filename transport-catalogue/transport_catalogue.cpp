@@ -7,6 +7,8 @@
 using namespace transport;
 using namespace geo;
 
+static const std::set<std::string_view> empty_set;
+
 std::string_view TransportCatalogue::AddId(const std::string_view id) {
     ids_.push_front(std::string {id});
     return {ids_.front().begin(), ids_.front().end()};
@@ -56,17 +58,13 @@ const std::optional<RouteStatistics> TransportCatalogue::GetStat(const BusDescri
 }
 
 const std::vector<std::string_view> TransportCatalogue::GetBusses4Stop(const std::string_view id) const {
-    std::vector<std::string_view> result;
-    if (busses4stop_.count(id)) {
-        const auto& busses = busses4stop_.at(id);
-        result.reserve(busses.size());
-        for (const auto& b : busses) {
-            result.push_back(b);
-        }
+    auto busses4stop_ptr = busses4stop_.find(id);
+    if (busses4stop_ptr != busses4stop_.end()) {
+        return busses4stop_ptr->second;
     } else {
         std::stringstream msg;
         msg << "Stop " << id << ": not found";
         throw std::out_of_range(msg.str());
     }
-    return result;
+    return empty_set;
 }
