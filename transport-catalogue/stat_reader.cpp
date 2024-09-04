@@ -10,6 +10,35 @@ using namespace std;
 using namespace geo;
 using namespace transport;
 
+
+size_t ReadCount(std::istream& input) {
+    size_t count;
+    input >> count >> ws;
+    return count;
+}
+
+string ReadLine(std::istream& input) {    
+    string line;
+    getline(input, line);
+    return line;
+}
+
+void ReadAndApply(TransportCatalogue& catalogue, std::istream& input) {
+    InputReader reader;
+    const size_t count = ReadCount(input);
+    for (int i = 0; i < count; ++i) { 
+        reader.ParseLine(ReadLine(input));
+    }
+    reader.ApplyCommands(catalogue);
+}
+
+void ReadAndEval(const TransportCatalogue& catalogue, std::istream& input, std::ostream& output) {
+    const size_t count = ReadCount(input);
+    for (int i = 0; i < count; ++i) {
+        ParseAndPrintStat(catalogue, ReadLine(input), output);
+    }
+}
+
 void ParseAndPrintStat(const TransportCatalogue& transport_catalogue, std::string_view request,
                        std::ostream& output) {
     auto r = Trim(request);
