@@ -57,7 +57,7 @@ const std::optional<RouteStatistics> TransportCatalogue::GetStat(const BusDescri
     return std::nullopt;
 }
 
-const std::vector<std::string_view> TransportCatalogue::GetBusses4Stop(const std::string_view id) const {
+const std::set<std::string_view>& TransportCatalogue::GetBusses4Stop(const std::string_view id) const {
     auto busses4stop_ptr = busses4stop_.find(id);
     if (busses4stop_ptr != busses4stop_.end()) {
         return busses4stop_ptr->second;
