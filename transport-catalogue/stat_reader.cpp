@@ -55,14 +55,14 @@ void ParseAndPrintStat(const TransportCatalogue& transport_catalogue, std::strin
     } else if (r.substr(0, 4) == "Stop") {
         const std::string_view stop_id = Trim(r.substr(4));
         try {
-            const auto busses4stop = transport_catalogue.GetBusses4Stop(stop_id);
+            const auto& busses4stop = transport_catalogue.GetBusses4Stop(stop_id);
             output << "Stop " << stop_id;
             if (busses4stop.empty()) {
                 output << ": no buses";
             } else {
                 output << ": buses";
-                for (const auto& b : busses4stop) {
-                    output << " " << b;
+                for (const auto& bus : busses4stop) {
+                    output << " " << bus;
                 }
             }
             output << std::endl;
