@@ -16,7 +16,7 @@ std::string_view TransportCatalogue::AddId(const std::string_view id) {
 
 void TransportCatalogue::AddStop(const std::string_view id, const Coordinates place) {
     std::string_view stop_id = AddId(id);
-    stops_.insert({stop_id, {stop_id, place}});
+    stops_.insert({stop_id, {stop_id, place, {}}});
     busses4stop_.insert({stop_id, {}});
 }
 
@@ -25,10 +25,16 @@ void TransportCatalogue::AddBus(const std::string_view id, const std::vector<std
     std::vector<std::string_view> stops_ids;
     stops_ids.reserve(stops.size());
     for (const auto& stop : stops) {
-        stops_ids.push_back(stops_.at(s).id);
+        stops_ids.push_back(stops_.at(stop).id);
         busses4stop_[stops_ids.back()].insert(bus_id);
     }
     busses_.insert({bus_id, {bus_id, std::move(stops_ids)}});
+}
+
+void TransportCatalogue::AddDists(const std::string_view id, const std::vector<Dist2Stop>& dists) {
+    for (const auto& [stop, dist] : dists) {
+        stops_.at(id).distances[stops_.at(stop).id] = dist;
+    }
 }
 
 const BusDescription* TransportCatalogue::GetBus(const std::string_view id) const {
@@ -42,17 +48,29 @@ const BusDescription* TransportCatalogue::GetBus(const std::string_view id) cons
 const std::optional<RouteStatistics> TransportCatalogue::GetStat(const BusDescription* bus) const {
     if (bus) {
         double route_length = 0.0;
+        int route_dist = 0;
         std::unordered_set<std::string_view> unique_stops;
         std::optional<StopDescription> prev_stop;
         for (const std::string_view& s : bus->stops) {
             const auto stop = stops_.at(s);
             unique_stops.insert(s);
             if (prev_stop) {
+                const auto& distances = prev_stop->distances;
+                auto dist_ptr = distances.find(s);
+                if (dist_ptr != distances.end()) {
+                    route_dist += dist_ptr->second;
+                } else if (stop.distances.end() != (dist_ptr = stop.distances.find(prev_stop->id))) {
+                    route_dist += dist_ptr->second;
+                } else {
+                    std::stringstream ss;
+                    ss << "distance between stop " << s << " and stop " << prev_stop->id << " not found in base";
+                    throw std::out_of_range(ss.str());
+                }
                 route_length += ComputeDistance(prev_stop->place, stop.place);
             }
             prev_stop = stop;
         }
-        return RouteStatistics {route_length, bus->stops.size(), unique_stops.size()};
+        return RouteStatistics {route_dist, bus->stops.size(), unique_stops.size(), route_dist / route_length};
     }
     return std::nullopt;
 }
