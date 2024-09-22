@@ -51,7 +51,7 @@ void ParseAndPrintStat(const TransportCatalogue& transport_catalogue, std::strin
             output << "not found"s << std::endl;
             return;
         }        
-        output << stat->stops_count << " stops on route, "s << stat->unique_stops << " unique stops, "s << std::setprecision(6) << stat->length << " route length"s << std::endl;
+        output << stat->stops_count << " stops on route, "s << stat->unique_stops << " unique stops, "s << std::setprecision(6) << stat->dist << " route length, "s << stat->curvature << " curvature"s << std::endl;
     } else if (r.substr(0, 4) == "Stop") {
         const std::string_view stop_id = Trim(r.substr(4));
         try {
