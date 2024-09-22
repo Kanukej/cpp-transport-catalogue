@@ -12,10 +12,14 @@
 #include "geo.h"
 
 namespace transport {
+    
+    using StopsMap = std::unordered_map<std::string_view, int>;
+    using Dist2Stop = std::pair<std::string_view, int>;
 
     struct StopDescription {
         std::string_view id;
         geo::Coordinates place;
+        StopsMap distances;
     };
 
     struct BusDescription {
@@ -24,15 +28,17 @@ namespace transport {
     };
 
     struct RouteStatistics {
-        double length = 0.0;
+        int dist = 0;
         size_t stops_count = 0;
         size_t unique_stops = 0;
+        double curvature = 0.0;
     };
 
     class TransportCatalogue {
     public:
         void AddStop(const std::string_view id, const geo::Coordinates place);
         void AddBus(const std::string_view id, std::vector<std::string_view> stops);
+        void AddDists(const std::string_view id, const std::vector<Dist2Stop>& dists);
         const BusDescription* GetBus(const std::string_view id) const;
         const std::optional<RouteStatistics> GetStat(const BusDescription* bus) const;
         const std::set<std::string_view>& GetBusses4Stop(const std::string_view id) const;
