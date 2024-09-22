@@ -6,26 +6,54 @@
 
 using namespace geo;
 using namespace transport;
+    
+
+static const std::string_view empty_string_view;
 
 /**
  * Парсит строку вида "10.123,  -30.1837" и возвращает пару координат (широта, долгота)
  */
-Coordinates ParseCoordinates(std::string_view str) {
+std::string_view ParseCoordinates(std::string_view str, Coordinates& result) {
     static const double nan = std::nan("");
 
     auto not_space = str.find_first_not_of(' ');
     auto comma = str.find(',');
 
     if (comma == str.npos) {
-        return {nan, nan};
+        result = {nan, nan};
+        return str.substr(comma);
     }
 
     auto not_space2 = str.find_first_not_of(' ', comma + 1);
+    auto comma2 = str.find(',', not_space2);
 
     double lat = std::stod(std::string(str.substr(not_space, comma - not_space)));
-    double lng = std::stod(std::string(str.substr(not_space2)));
+    double lng = std::stod(std::string(str.substr(not_space2, comma2 - not_space2)));
 
-    return {lat, lng};
+    result = {lat, lng};
+    if (comma2 == str.npos) {
+        return {};
+    }
+    return str.substr(comma2 + 1);
+}
+
+std::pair<std::string_view, int> ParseDistanceToStop(std::string_view str) {
+    auto delim = str.find(" to ");
+    return {str.substr(delim + 4), std::stoi(std::string(str.substr(0, delim - 1)))};
+} 
+ 
+/**
+ * Парсит строку в пары типа <остановка, расстояние до нее>
+ */
+std::vector<transport::Dist2Stop> ParseDistancesToStops(std::string_view str) {
+    std::vector<transport::Dist2Stop> result;
+    while (!str.empty()) {
+        auto not_space = str.find_first_not_of(' ');
+        auto comma = str.find(',');
+        result.push_back(ParseDistanceToStop(str.substr(not_space, comma - not_space)));
+        str = comma != str.npos ? str.substr(comma + 1) : empty_string_view;
+    }
+    return result;
 }
 
 /**
@@ -108,6 +136,7 @@ void InputReader::ParseLine(std::string_view line) {
 void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue& catalogue) const {
     std::vector<const CommandDescription*> stop_cmd;
     std::vector<const CommandDescription*> bus_cmd;
+    std::vector<std::pair<std::string_view, std::vector<transport::Dist2Stop>>> stop_dists;
     for (const auto& cmd : commands_) {
         if (cmd) {
             if (cmd.command == "Stop") {
@@ -118,8 +147,12 @@ void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue& catalogue) 
         }
     }
     for (const auto& cmd : stop_cmd) {
-        Coordinates place = ParseCoordinates(cmd->description);
+        Coordinates place;
+        stop_dists.emplace_back(cmd->id, ParseDistancesToStops(ParseCoordinates(cmd->description, place)));      
         catalogue.AddStop(cmd->id, place);        
+    }
+    for (const auto& [id, dists] : stop_dists) {
+        catalogue.AddDists(id, dists);
     }
     for (const auto& cmd : bus_cmd) {
         std::vector<std::string_view> route = ParseRoute(cmd->description);
