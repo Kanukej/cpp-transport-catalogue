@@ -14,7 +14,11 @@
 namespace transport {
     
     using StopsMap = std::unordered_map<std::string_view, int>;
-    using Dist2Stop = std::pair<std::string_view, int>;
+    
+    struct Dist2Stop {
+        std::string_view stop;
+        int distance;
+    };
 
     struct StopDescription {
         std::string_view id;
@@ -38,7 +42,7 @@ namespace transport {
     public:
         void AddStop(const std::string_view id, const geo::Coordinates place);
         void AddBus(const std::string_view id, std::vector<std::string_view> stops);
-        void AddDists(const std::string_view id, const std::vector<Dist2Stop>& dists);
+        void AddDistance(const std::string_view from, const std::string_view to, const int dists);
         const BusDescription* GetBus(const std::string_view id) const;
         const std::optional<RouteStatistics> GetStat(const BusDescription* bus) const;
         const std::set<std::string_view>& GetBusses4Stop(const std::string_view id) const;
