@@ -31,10 +31,8 @@ void TransportCatalogue::AddBus(const std::string_view id, const std::vector<std
     busses_.insert({bus_id, {bus_id, std::move(stops_ids)}});
 }
 
-void TransportCatalogue::AddDists(const std::string_view id, const std::vector<Dist2Stop>& dists) {
-    for (const auto& [stop, dist] : dists) {
-        stops_.at(id).distances[stops_.at(stop).id] = dist;
-    }
+void TransportCatalogue::AddDistance(const std::string_view from, const std::string_view to, const int dist) {
+    stops_.at(from).distances[stops_.at(to).id] = dist;
 }
 
 const BusDescription* TransportCatalogue::GetBus(const std::string_view id) const {
