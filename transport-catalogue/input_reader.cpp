@@ -37,7 +37,7 @@ std::string_view ParseCoordinates(std::string_view str, Coordinates& result) {
     return str.substr(comma2 + 1);
 }
 
-std::pair<std::string_view, int> ParseDistanceToStop(std::string_view str) {
+transport::Dist2Stop ParseDistanceToStop(std::string_view str) {
     auto delim = str.find(" to ");
     return {str.substr(delim + 4), std::stoi(std::string(str.substr(0, delim - 1)))};
 } 
@@ -136,7 +136,7 @@ void InputReader::ParseLine(std::string_view line) {
 void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue& catalogue) const {
     std::vector<const CommandDescription*> stop_cmd;
     std::vector<const CommandDescription*> bus_cmd;
-    std::vector<std::pair<std::string_view, std::vector<transport::Dist2Stop>>> stop_dists;
+    std::unordered_map<std::string_view, std::vector<transport::Dist2Stop>> stop_dists;
     for (const auto& cmd : commands_) {
         if (cmd) {
             if (cmd.command == "Stop") {
@@ -148,11 +148,13 @@ void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue& catalogue) 
     }
     for (const auto& cmd : stop_cmd) {
         Coordinates place;
-        stop_dists.emplace_back(cmd->id, ParseDistancesToStops(ParseCoordinates(cmd->description, place)));      
+        stop_dists.emplace(cmd->id, ParseDistancesToStops(ParseCoordinates(cmd->description, place)));      
         catalogue.AddStop(cmd->id, place);        
     }
-    for (const auto& [id, dists] : stop_dists) {
-        catalogue.AddDists(id, dists);
+    for (const auto& [from, dists] : stop_dists) {
+        for (const auto& [to, dist] : dists) {
+            catalogue.AddDistance(from, to, dist);
+        }
     }
     for (const auto& cmd : bus_cmd) {
         std::vector<std::string_view> route = ParseRoute(cmd->description);
