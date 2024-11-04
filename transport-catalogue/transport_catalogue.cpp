@@ -7,8 +7,6 @@
 using namespace transport;
 using namespace geo;
 
-static const std::set<std::string_view> empty_set;
-
 std::string_view TransportCatalogue::AddId(const std::string_view id) {
     ids_.push_front(std::string {id});
     return {ids_.front().begin(), ids_.front().end()};
@@ -20,7 +18,7 @@ void TransportCatalogue::AddStop(const std::string_view id, const Coordinates pl
     busses4stop_.insert({stop_id, {}});
 }
 
-void TransportCatalogue::AddBus(const std::string_view id, const std::vector<std::string_view> stops) {
+void TransportCatalogue::AddBus(const std::string_view id, const std::vector<std::string_view>& stops, const std::vector<std::string_view>& final_stops) {
     std::string_view bus_id = AddId(id);
     std::vector<std::string_view> stops_ids;
     stops_ids.reserve(stops.size());
@@ -28,7 +26,11 @@ void TransportCatalogue::AddBus(const std::string_view id, const std::vector<std
         stops_ids.push_back(stops_.at(stop).id);
         busses4stop_[stops_ids.back()].insert(bus_id);
     }
-    busses_.insert({bus_id, {bus_id, std::move(stops_ids)}});
+    std::vector<std::string_view> final_stops_ids;
+    for (const auto& stop : final_stops) {
+        final_stops_ids.push_back(stops_.at(stop).id);
+    }
+    buses_.insert({bus_id, {bus_id, std::move(stops_ids), std::move(final_stops_ids)}});
 }
 
 void TransportCatalogue::AddDistance(const std::string_view from, const std::string_view to, const int dist) {
@@ -36,8 +38,8 @@ void TransportCatalogue::AddDistance(const std::string_view from, const std::str
 }
 
 const BusDescription* TransportCatalogue::GetBus(const std::string_view id) const {
-    auto bus_ptr = busses_.find(id);
-    if (bus_ptr != busses_.end()) {
+    auto bus_ptr = buses_.find(id);
+    if (bus_ptr != buses_.end()) {
         return &bus_ptr->second;
     }
     return nullptr;
@@ -73,14 +75,48 @@ const std::optional<RouteStatistics> TransportCatalogue::GetStat(const BusDescri
     return std::nullopt;
 }
 
-const std::set<std::string_view>& TransportCatalogue::GetBusses4Stop(const std::string_view id) const {
+const std::set<BusPtr>* TransportCatalogue::GetBusses4Stop(const std::string_view id) const {
     auto busses4stop_ptr = busses4stop_.find(id);
     if (busses4stop_ptr != busses4stop_.end()) {
-        return busses4stop_ptr->second;
-    } else {
-        std::stringstream msg;
-        msg << "Stop " << id << ": not found";
-        throw std::out_of_range(msg.str());
+        return &busses4stop_ptr->second;
     }
-    return empty_set;
+    return nullptr;
+}
+
+std::vector<geo::Coordinates> TransportCatalogue::GetStops() const {
+    std::set<std::string_view> stops = GetStopIds();
+    std::vector<geo::Coordinates> ans;
+    ans.reserve(stops.size());
+    for (const auto& [id, descr] : stops_) {
+        if (stops.count(id) > 0) {
+            ans.push_back(descr.place);
+        }
+    }
+    return ans;
+}
+
+std::set<std::string_view> TransportCatalogue::GetStopIds() const {
+    std::set<std::string_view> stops;
+    for (const auto& [id, descr] : buses_) {
+        for (const auto& s : descr.stops) {
+            stops.insert(s);
+        }
+    }
+    return stops;
+}
+
+std::vector<std::string_view> TransportCatalogue::GetBuses() const {
+    std::vector<std::string_view> buses;
+    for (const auto& [id, descr] : buses_) {
+        buses.push_back(id);
+    }
+    return buses;
+}
+
+const StopDescription* TransportCatalogue::GetStop(const std::string_view id) const {
+    const auto stop_ptr = stops_.find(id);
+    if (stop_ptr != stops_.end()) {
+        return &stop_ptr->second;
+    }
+    return nullptr;
 }
