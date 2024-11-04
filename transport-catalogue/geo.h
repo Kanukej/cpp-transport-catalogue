@@ -18,13 +18,6 @@ namespace geo {
         }
     };
 
-    inline double ComputeDistance(Coordinates from, Coordinates to) {
-        using namespace std;
-        if (from == to) {
-            return 0;
-        }
-        return acos(sin(from.lat * Delta) * sin(to.lat * Delta)
-                   + cos(from.lat * Delta) * cos(to.lat * Delta) * cos(abs(from.lng - to.lng) * Delta)) * EarthRadius;
-    }
+    double ComputeDistance(Coordinates from, Coordinates to);
 
 }
