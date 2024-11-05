@@ -90,9 +90,9 @@ class MapRenderer {
 public:
     MapRenderer(const domain::RenderSettings& settings, const transport::TransportCatalogue& db);
     const svg::Document Render() const;
+private:
     void RenderRoutes(const SphereProjector& projector, svg::Document& doc) const;
     void RenderStops(const SphereProjector& projector, svg::Document& doc) const;
-private:
     std::unique_ptr<svg::Text> MakeBaseBusText(const std::string_view& stop, const std::string_view& data, const SphereProjector& projector) const;
     std::unique_ptr<svg::Text> MakeBaseStopText(const std::string_view& stop,  const SphereProjector& projector) const;
     const domain::RenderSettings& settings_;
