@@ -11,7 +11,11 @@ public:
     const domain::RenderSettings& GetSettings() const;
     
     const domain::Commands& GetCommands() const;
-private:    
+private:
+    void ParseBaseRequest(const json::Dict& root);
+    void ParseStatRequest(const json::Dict& root);
+    void ParseSettings(const json::Node& root);
+    
     template <typename T>
     T Default() {
         return T();
