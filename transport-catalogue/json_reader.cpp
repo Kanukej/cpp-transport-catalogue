@@ -78,7 +78,7 @@ void JsonReader::ParseStatRequest(const json::Dict& root) {
     }
 }
 
-void JsonReader::ParseSettings(const json::Node& root) {    
+void JsonReader::ParseSettings(const json::Dict& root) {    
     for (auto ptr = root.find("render_settings"); ptr != root.end(); ptr = root.end()) {
         const auto& s = ptr->second.AsMap();
         settings_.width = std::move(GetValueOrDefault<double>(s, "width"));
