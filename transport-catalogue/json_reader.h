@@ -14,7 +14,7 @@ public:
 private:
     void ParseBaseRequest(const json::Dict& root);
     void ParseStatRequest(const json::Dict& root);
-    void ParseSettings(const json::Node& root);
+    void ParseSettings(const json::Dict& root);
     
     template <typename T>
     T Default() {
