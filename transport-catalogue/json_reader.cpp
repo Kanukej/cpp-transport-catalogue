@@ -9,10 +9,7 @@ using namespace json;
 using namespace domain;
 using namespace std::literals;
 
-void JsonReader::ParseCommands(std::istream& in) {
-    Document doc = json::Load(in);
-    const auto& root = doc.GetRoot().AsMap();
-    
+void JsonReader::ParseBaseRequest(const json::Dict& root) {
     for (auto ptr = root.find("base_requests"); ptr != root.end(); ptr = root.end()) {
         const auto& requests = ptr->second.AsArray();
         for (const auto& r : requests) {
@@ -56,7 +53,10 @@ void JsonReader::ParseCommands(std::istream& in) {
                 commands_.bus_requests.push_back(ans);
             }
         }
-    }
+    } 
+}
+
+void JsonReader::ParseStatRequest(const json::Dict& root) {
     for (auto ptr = root.find("stat_requests"); ptr != root.end(); ptr = root.end()) {
         const auto& requests = ptr->second.AsArray();
         for (const auto& req : requests) {
@@ -76,6 +76,9 @@ void JsonReader::ParseCommands(std::istream& in) {
             commands_.stat_requests.push_back(ans);
         }
     }
+}
+
+void JsonReader::ParseSettings(const json::Node& root) {    
     for (auto ptr = root.find("render_settings"); ptr != root.end(); ptr = root.end()) {
         const auto& s = ptr->second.AsMap();
         settings_.width = std::move(GetValueOrDefault<double>(s, "width"));
@@ -91,6 +94,14 @@ void JsonReader::ParseCommands(std::istream& in) {
         settings_.underlayer_width = std::move(GetValueOrDefault<double>(s, "underlayer_width"));
         settings_.color_palette = std::move(GetValueOrDefault<ColorPalette>(s, "color_palette"));
     }
+}
+
+void JsonReader::ParseCommands(std::istream& in) {
+    Document doc = json::Load(in);
+    const auto& root = doc.GetRoot().AsMap();
+    ParseBaseRequest(root);
+    ParseStatRequest(root);
+    ParseSettings(root);    
 }
 
 const RenderSettings& JsonReader::GetSettings() const {
