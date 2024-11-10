@@ -13,7 +13,7 @@ void JsonReader::ParseBaseRequest(const json::Dict& root) {
     for (auto ptr = root.find("base_requests"); ptr != root.end(); ptr = root.end()) {
         const auto& requests = ptr->second.AsArray();
         for (const auto& r : requests) {
-            const auto& base_request = r.AsMap();
+            const auto& base_request = r.AsDict();
             std::string type = base_request.at("type").AsString();
             std::string name = base_request.at("name").AsString();
             if (type == "Stop") {
@@ -21,7 +21,7 @@ void JsonReader::ParseBaseRequest(const json::Dict& root) {
                 ans.name = name;
                 ans.place = {base_request.at("latitude").AsDouble(), base_request.at("longitude").AsDouble()};
                 if (base_request.count("road_distances")) {
-                    for (const auto& [id, dist] : base_request.at("road_distances").AsMap()) {
+                    for (const auto& [id, dist] : base_request.at("road_distances").AsDict()) {
                         ans.road_distances.push_back({id, dist.AsInt()});
                     }
                 }
@@ -61,7 +61,7 @@ void JsonReader::ParseStatRequest(const json::Dict& root) {
         const auto& requests = ptr->second.AsArray();
         for (const auto& req : requests) {
             StatRequest ans;
-            const auto& r = req.AsMap();
+            const auto& r = req.AsDict();
             ans.id = GetValueOrDefault<int>(r, "id");
             std::string type = GetValueOrDefault<std::string>(r, "type");
             if (type == "Bus") {
@@ -80,7 +80,7 @@ void JsonReader::ParseStatRequest(const json::Dict& root) {
 
 void JsonReader::ParseSettings(const json::Dict& root) {    
     for (auto ptr = root.find("render_settings"); ptr != root.end(); ptr = root.end()) {
-        const auto& s = ptr->second.AsMap();
+        const auto& s = ptr->second.AsDict();
         settings_.width = std::move(GetValueOrDefault<double>(s, "width"));
         settings_.height = std::move(GetValueOrDefault<double>(s, "height"));
         settings_.padding = std::move(GetValueOrDefault<double>(s, "padding"));
@@ -98,7 +98,7 @@ void JsonReader::ParseSettings(const json::Dict& root) {
 
 void JsonReader::ParseCommands(std::istream& in) {
     Document doc = json::Load(in);
-    const auto& root = doc.GetRoot().AsMap();
+    const auto& root = doc.GetRoot().AsDict();
     ParseBaseRequest(root);
     ParseStatRequest(root);
     ParseSettings(root);    
@@ -140,7 +140,7 @@ json::Array JsonReader::CastNode(const json::Node& node) {
 
 template <>
 json::Dict JsonReader::CastNode(const json::Node& node) {
-    return node.AsMap();
+    return node.AsDict();
 }
 
 template <>
