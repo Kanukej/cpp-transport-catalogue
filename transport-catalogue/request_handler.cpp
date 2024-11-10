@@ -1,5 +1,6 @@
 #include "request_handler.h"
 #include "domain.h"
+#include "json_builder.h"
 
 #include <sstream>
 
@@ -28,49 +29,50 @@ const svg::Document RequestHandler::RenderMap() const {
 
 
 json::Document RequestHandler::ApplyCommands(const domain::Commands& commands) const {
-    Array ans;
+    json::Builder ans;
+    ans.StartArray();
     for (const auto& cmd : commands.stat_requests) {
-        json::Dict result;
+        ans.StartDict();
         switch (cmd.type) {
             case StatType::Bus: {
                 const auto bus = db_.GetBus(cmd.name);
                 const auto stat = db_.GetStat(bus);
-                result["request_id"] = cmd.id;
+                ans.Key("request_id").Value(cmd.id);
                 if (!stat) {
-                    result["error_message"] = "not found";
+                    ans.Key("error_message").Value("not found");
                 } else {
-                    result["curvature"] = stat->curvature;
-                    result["route_length"] = stat->dist;
-                    result["stop_count"] = static_cast<int>(stat->stops_count);
-                    result["unique_stop_count"] = static_cast<int>(stat->unique_stops);
+                    ans.Key("curvature").Value(stat->curvature)
+                       .Key("route_length").Value(stat->dist)
+                       .Key("stop_count").Value(static_cast<int>(stat->stops_count))
+                       .Key("unique_stop_count").Value(static_cast<int>(stat->unique_stops));
                 }
                 break;
             }
             case StatType::Stop: {
                 const auto buses4stop = db_.GetBusses4Stop(cmd.name);
-                result["request_id"] = cmd.id;
+                ans.Key("request_id").Value(cmd.id);
                 if (!buses4stop) {
-                    result["error_message"] = "not found";
+                    ans.Key("error_message").Value("not found");
                 } else {
-                    Array buses;
+                    ans.Key("buses").StartArray();
                     for (const auto& bus : *buses4stop) {
-                        buses.push_back(std::string(bus));
+                        ans.Value(std::string(bus));
                     }
-                    result["buses"] = buses;
+                    ans.EndArray();
                 }
                 break;
             }
             case StatType::Map:
-                result["request_id"] = cmd.id;
                 const auto& doc = RenderMap();
                 std::stringstream map;
                 doc.Render(map);
-                result["map"] = map.str();
+                ans.Key("request_id").Value(cmd.id)
+                   .Key("map").Value(map.str());
                 break;
         }
-        ans.push_back(result);
+        ans.EndDict();
     }
-    return Document(ans);
+    return Document(ans.EndArray().Build());
 }
 
 CatalogueConstructor::CatalogueConstructor(transport::TransportCatalogue& db) : db_(db) {
