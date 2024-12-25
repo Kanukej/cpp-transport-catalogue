@@ -10,7 +10,7 @@ using namespace json;
 using namespace domain;
 
 
-RequestHandler::RequestHandler(const TransportCatalogue& db, const renderer::MapRenderer& renderer) : db_(db), renderer_(renderer) {
+RequestHandler::RequestHandler(const TransportCatalogue& db, const renderer::MapRenderer& renderer, const router::TransportRouter& router) : db_(db), renderer_(renderer), router_(router) {
     //
 }
 
@@ -62,20 +62,50 @@ json::Document RequestHandler::ApplyCommands(const domain::Commands& commands) c
                 }
                 break;
             }
-            case StatType::Map:
+            case StatType::Map: {
                 const auto& doc = RenderMap();
                 std::stringstream map;
                 doc.Render(map);
                 ans.Key("request_id").Value(cmd.id)
                    .Key("map").Value(map.str());
                 break;
+            }
+            case StatType::Route: {
+                auto path = router_.GetPath(cmd.from, cmd.to);
+                if (path) {
+                    ans.Key("request_id").Value(cmd.id)
+                       .Key("total_time").Value(path->time)
+                       .Key("items").StartArray();
+                    for (const auto& d : path->route) {
+                        if (d.type == transport::PathType::Wait) {
+                            ans.StartDict()
+                               .Key("type").Value("Wait")
+                               .Key("stop_name").Value(std::string(d.id))
+                               .Key("time").Value(d.time)
+                               .EndDict();
+                        } else if (d.type == transport::PathType::Bus) {
+                            ans.StartDict()
+                               .Key("type").Value("Bus")
+                               .Key("bus").Value(std::string(d.id))
+                               .Key("span_count").Value(d.span.value())
+                               .Key("time").Value(d.time)
+                               .EndDict();
+                        }
+                    }
+                    ans.EndArray();
+                } else {
+                    ans.Key("request_id").Value(cmd.id)
+                       .Key("error_message").Value("not found");
+                }
+                break;
+            }
         }
         ans.EndDict();
     }
     return Document(ans.EndArray().Build());
 }
 
-CatalogueConstructor::CatalogueConstructor(transport::TransportCatalogue& db) : db_(db) {
+CatalogueConstructor::CatalogueConstructor(transport::TransportCatalogue& db, const domain::RoutingSettings& settings) : db_(db), settings_(settings) {
     //
 }
 
@@ -91,4 +121,5 @@ void CatalogueConstructor::FillFromCommands(const domain::Commands& commands) {
     for (const auto& cmd : commands.bus_requests) {
         db_.AddBus(cmd.name, cmd.stops, cmd.final_stops);        
     }
+    db_.BuildMapGraph(settings_.bus_velocity, settings_.bus_wait_time);
 }
