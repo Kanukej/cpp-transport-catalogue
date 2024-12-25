@@ -14,7 +14,8 @@ namespace domain {
 enum class StatType {
     Bus,
     Stop,
-    Map
+    Map,
+    Route
 };
 
 struct Dist2Stop {
@@ -44,6 +45,8 @@ struct StatRequest {
     int id;
     StatType type;
     std::string name;
+    std::string from;
+    std::string to;
 };
 
 struct Commands {
@@ -61,6 +64,11 @@ struct Offset {
 };
 
 using ColorPalette = std::vector<svg::Color>;
+    
+struct RoutingSettings {
+    int bus_wait_time = 1;
+    int bus_velocity = 1;
+};
 
 struct RenderSettings {
     double width;
@@ -74,7 +82,7 @@ struct RenderSettings {
     svg::Point stop_label_offset;
     svg::Color underlayer_color;
     double underlayer_width;
-    ColorPalette color_palette;    
+    ColorPalette color_palette;
 };
 
 }
