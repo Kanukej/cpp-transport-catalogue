@@ -72,9 +72,21 @@ void JsonReader::ParseStatRequest(const json::Dict& root) {
                 ans.name = GetValueOrDefault<std::string>(r, "name");
             } else if (type == "Map") {
                 ans.type = StatType::Map;
+            } else if (type == "Route") {
+                ans.type = StatType::Route;
+                ans.from = GetValueOrDefault<std::string>(r, "from");
+                ans.to = GetValueOrDefault<std::string>(r, "to");
             }
             commands_.stat_requests.push_back(ans);
         }
+    }
+}
+
+void JsonReader::ParseBaseSettings(const json::Dict& root) {    
+    for (auto ptr = root.find("routing_settings"); ptr != root.end(); ptr = root.end()) {
+        const auto& s = ptr->second.AsDict();
+        base_settings_.bus_wait_time = std::move(GetValueOrDefault<int>(s, "bus_wait_time"));
+        base_settings_.bus_velocity = std::move(GetValueOrDefault<int>(s, "bus_velocity"));
     }
 }
 
@@ -101,11 +113,16 @@ void JsonReader::ParseCommands(std::istream& in) {
     const auto& root = doc.GetRoot().AsDict();
     ParseBaseRequest(root);
     ParseStatRequest(root);
-    ParseSettings(root);    
+    ParseSettings(root);
+    ParseBaseSettings(root);
 }
 
 const RenderSettings& JsonReader::GetSettings() const {
     return settings_;
+}
+
+const RoutingSettings& JsonReader::GetBaseSettings() const {
+    return base_settings_;
 }
 
 const Commands& JsonReader::GetCommands() const {
