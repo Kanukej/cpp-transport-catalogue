@@ -12,7 +12,6 @@ bool IsZero(double value) {
 }
     
 MapRenderer::MapRenderer(const domain::RenderSettings& settings, const transport::TransportCatalogue& db) : settings_(settings), db_(db) {
-    //
 }
     
 const svg::Document MapRenderer::Render() const {
@@ -48,7 +47,7 @@ void MapRenderer::RenderRoutes(const SphereProjector& projector, svg::Document& 
             color_it = settings_.color_palette.begin();
         }
     }
-    //
+    
     color_it = settings_.color_palette.begin();
     for (const auto& bus : buses) {
         const auto descr = db_.GetBus(bus);
