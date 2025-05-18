@@ -3,7 +3,6 @@
 namespace router {
     
     TransportRouter::TransportRouter(const transport::TransportCatalogue& db) : db_(db), router_(graph::Router (db_.GetMapGraph())) {
-        //
     }
     
     std::optional<transport::PathDescription> TransportRouter::GetPath(const std::string_view& from, const std::string_view& to)  const {
