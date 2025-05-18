@@ -11,7 +11,6 @@ using namespace domain;
 
 
 RequestHandler::RequestHandler(const TransportCatalogue& db, const renderer::MapRenderer& renderer, const router::TransportRouter& router) : db_(db), renderer_(renderer), router_(router) {
-    //
 }
 
 std::optional<RouteStatistics> RequestHandler::GetBusStat(const std::string_view& bus_name) const {
@@ -106,7 +105,6 @@ json::Document RequestHandler::ApplyCommands(const domain::Commands& commands) c
 }
 
 CatalogueConstructor::CatalogueConstructor(transport::TransportCatalogue& db, const domain::RoutingSettings& settings) : db_(db), settings_(settings) {
-    //
 }
 
 void CatalogueConstructor::FillFromCommands(const domain::Commands& commands) {
